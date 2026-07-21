@@ -12,6 +12,10 @@ import {
 import { providerMetadata } from "@/kilocode/provider/metadata" // kilocode_change
 import { filterPromptTrainingModels } from "@/kilocode/provider/model-filter" // kilocode_change
 import { overlay as overlayAnacondaDesktop } from "@/kilocode/anaconda-desktop/provider" // kilocode_change
+// fork_change start
+import { assertLockedProvider, isLockedProvider } from "@/fork/lock"
+import { ForkProviderLockedError } from "@/fork/lock"
+// fork_change end
 import { Effect, Schema } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
@@ -38,6 +42,16 @@ function mapProviderAuthError<A, R>(self: Effect.Effect<A, ProviderAuth.Error, R
     }),
   )
 }
+
+// fork_change start
+function mapForkLockError<A, R>(self: Effect.Effect<A, ForkProviderLockedError, R>) {
+  return self.pipe(
+    Effect.mapError(
+      (err) => new ProviderAuthApiError({ name: "BadRequest", data: { field: "providerID", message: err.message } }),
+    ),
+  )
+}
+// fork_change end
 
 export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider", (handlers) =>
   Effect.gen(function* () {
@@ -74,7 +88,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         providers,
         (item, id) => Object.keys(item.models).length > 0 || id in connected || failedSet.has(id),
       )
-      return {
+      const result = { // fork_change - changed from return to feed into lock filter
         all: Object.values(validProviders).map((item) => ({
           ...Provider.toPublicInfo(item),
           metadata: providerMetadata(item.id),
@@ -84,6 +98,16 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         failed,
       }
       // kilocode_change end
+      // fork_change start - hard lock: strip every provider except the locked one
+      // from the catalog and connected list. Even if the underlying state was
+      // mutated, the API response must never advertise another provider.
+      return {
+        all: result.all.filter((item) => isLockedProvider(item.id)),
+        default: Object.fromEntries(Object.entries(result.default).filter(([id]) => isLockedProvider(id))),
+        connected: result.connected.filter((id) => isLockedProvider(id)),
+        failed: result.failed.filter((id) => isLockedProvider(id)),
+      }
+      // fork_change end
     })
 
     const auth = Effect.fn("ProviderHttpApi.auth")(function* () {
@@ -94,6 +118,9 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
       params: { providerID: ProviderV2.ID }
       payload: ProviderAuth.AuthorizeInput
     }) {
+      // fork_change start
+      yield* mapForkLockError(assertLockedProvider(ctx.params.providerID))
+      // fork_change end
       return yield* mapProviderAuthError(
         svc.authorize({
           providerID: ctx.params.providerID,
@@ -122,6 +149,9 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
       params: { providerID: ProviderV2.ID }
       payload: ProviderAuth.CallbackInput
     }) {
+      // fork_change start
+      yield* mapForkLockError(assertLockedProvider(ctx.params.providerID))
+      // fork_change end
       yield* mapProviderAuthError(
         svc.callback({
           providerID: ctx.params.providerID,

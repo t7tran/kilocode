@@ -1,3 +1,4 @@
+import "@/fork/preload" // fork_change - must be first; forces models.dev fetch off
 import yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 import { RunCommand } from "./cli/cmd/run"
@@ -50,7 +51,7 @@ function show(out: string) {
 
 let cli = yargs(args) // kilocode_change
   .parserConfiguration({ "populate--": true })
-  .scriptName("kilo") // kilocode_change
+  .scriptName("genix-cli") // kilocode_change
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")

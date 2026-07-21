@@ -11,6 +11,18 @@ import {
 } from "./shared/custom-provider"
 import { isCustomProviderPackage, KILO_AUTO, KILO_PROVIDER_ID, parseModelString } from "./shared/provider-model"
 import { configFeatures } from "./features"
+import { fetchOpenAIModels } from "./shared/fetch-models"
+
+/**
+ * The build is locked to the single Genix provider. Its identity mirrors
+ * packages/opencode/src/fork/lock.ts (id + gateway base URL) — kept in sync
+ * manually because the server injects it into provider state, not into the
+ * config the extension can read. Genix has no models.dev catalog entry and no
+ * runtime model discovery, so it only shows as "connected" when its model list
+ * is present in config. See ensureGenixModels below.
+ */
+const GENIX_PROVIDER_ID = "genix"
+const GENIX_GATEWAY_BASE_URL = "https://ai.gateway.genixventures.com/v1"
 
 /**
  * Compute the default model selection from CLI config, VS Code settings, or hardcoded fallback.
@@ -292,6 +304,37 @@ async function enableConfigured(ctx: ActionContext, id: string, config: Config) 
   await saveGlobal(ctx, { disabled_providers: disabled })
 }
 
+function readBaseURL(config: unknown): string | undefined {
+  if (!record(config)) return undefined
+  const options = config.options
+  if (!record(options)) return undefined
+  return typeof options.baseURL === "string" && options.baseURL ? options.baseURL : undefined
+}
+
+/**
+ * Fetch the Genix model list from the gateway and persist it to config so the
+ * locked provider shows as connected. No-op for any other provider id. Throws
+ * if the gateway returns no usable models, so the connect flow reports a real
+ * failure instead of silently leaving the provider disconnected.
+ */
+async function ensureGenixModels(ctx: ActionContext, id: string, apiKey: string) {
+  if (id !== GENIX_PROVIDER_ID) return
+  const config = await configs(ctx)
+  const existing = record(config.global.provider?.[id]) ? (config.global.provider![id] as Record<string, unknown>) : {}
+  const baseURL =
+    readBaseURL(config.merged.provider?.[id]) ?? readBaseURL(existing) ?? GENIX_GATEWAY_BASE_URL
+  const models = await fetchOpenAIModels({ baseURL, apiKey })
+  if (models.length === 0) {
+    throw new Error("The Genix gateway returned no models. Check the API key and try again.")
+  }
+  const modelsMap: Record<string, { name: string }> = {}
+  for (const model of models) modelsMap[model.id] = { name: model.name }
+  await saveGlobal(ctx, {
+    provider: { [id]: { ...existing, models: modelsMap } },
+    disabled_providers: disabledWithout(config.global.disabled_providers, id),
+  })
+}
+
 export async function connectProvider(
   ctx: ActionContext,
   requestId: string,
@@ -305,6 +348,12 @@ export async function connectProvider(
     const meta = cleanMetadata(metadata)
     const auth = meta ? { type: "api" as const, key: apiKey, metadata: meta } : { type: "api" as const, key: apiKey }
     await ctx.client.auth.set({ providerID: id, auth }, { throwOnError: true })
+    // Setting auth alone is not enough for Genix: the provider only appears as
+    // "connected" once its models exist in config, and a prior disconnect wipes
+    // that config. Without this, auth saves and models load in the dialog, but
+    // the provider stays "disconnected" in the UI. Fetch the models from the
+    // gateway and persist them (also clearing any disabled flag).
+    await ensureGenixModels(ctx, id, apiKey)
     await ctx.disposeGlobal(`provider connect (${id})`)
     await ctx.fetchAndSendProviders()
     ctx.postMessage({ type: "providerConnected", requestId, providerID: id })

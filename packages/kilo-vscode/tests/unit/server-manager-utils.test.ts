@@ -66,7 +66,7 @@ describe("parseServerPort", () => {
 describe("cli tree-sitter resources", () => {
   it("resolves resources next to the VS Code bundled CLI", () => {
     const root = "/Users/test/.vscode/extensions/kilocode.kilo-code-7.2.50-darwin-arm64"
-    const bin = `${root}/bin/kilo`
+    const bin = `${root}/bin/genix-cli`
 
     expect(treeSitterDirForBinary(bin)).toBe(`${root}/bin/tree-sitter`)
     expect(treeSitterDirForExtension(root)).toBe(`${root}/bin/tree-sitter`)
@@ -76,7 +76,7 @@ describe("cli tree-sitter resources", () => {
 
   it("resolves resources next to a Windows packaged CLI", () => {
     const root = String.raw`C:\Users\test\.vscode\extensions\kilocode.kilo-code-7.2.50-win32-x64`
-    const bin = String.raw`${root}\bin\kilo.exe`
+    const bin = String.raw`${root}\bin\genix-cli.exe`
 
     expect(treeSitterDirForBinary(bin)).toBe(String.raw`${root}\bin\tree-sitter`)
     expect(treeSitterDirForExtension(root)).toBe(String.raw`${root}\bin\tree-sitter`)
@@ -89,8 +89,8 @@ describe("cli tree-sitter resources", () => {
   it("copies the Kilo sandbox worker with the packaged CLI binary", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "kilo-vscode-sandbox-worker-"))
     try {
-      const source = path.join(root, "dist", "@kilocode", "cli-darwin-arm64", "bin", "kilo")
-      const target = path.join(root, "extension", "bin", "kilo")
+      const source = path.join(root, "dist", "@kilocode", "cli-darwin-arm64", "bin", "genix-cli")
+      const target = path.join(root, "extension", "bin", "genix-cli")
       await fs.mkdir(path.dirname(source), { recursive: true })
       await fs.mkdir(path.dirname(target), { recursive: true })
       await fs.writeFile(kiloSandboxWorkerForBinary(source), "worker")
@@ -106,8 +106,8 @@ describe("cli tree-sitter resources", () => {
   it("copies runtime and language WASMs with the packaged CLI binary", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "kilo-vscode-tree-sitter-"))
     try {
-      const source = path.join(root, "dist", "@kilocode", "cli-darwin-arm64", "bin", "kilo")
-      const target = path.join(root, "extension", "bin", "kilo")
+      const source = path.join(root, "dist", "@kilocode", "cli-darwin-arm64", "bin", "genix-cli")
+      const target = path.join(root, "extension", "bin", "genix-cli")
       const dir = treeSitterDirForBinary(source)
 
       await fs.mkdir(dir, { recursive: true })
@@ -131,8 +131,8 @@ describe("cli tree-sitter resources", () => {
   it("copies the Linux sandbox helper and license resources", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "kilo-vscode-sandbox-"))
     try {
-      const source = path.join(root, "dist", "bin", "kilo")
-      const target = path.join(root, "extension", "bin", "kilo")
+      const source = path.join(root, "dist", "bin", "genix-cli")
+      const target = path.join(root, "extension", "bin", "genix-cli")
       const helper = path.join(path.dirname(source), "bwrap")
       const license = path.join(path.dirname(source), "licenses", "bubblewrap", "COPYING")
       const notice = path.join(path.dirname(license), "NOTICE")
@@ -178,8 +178,8 @@ describe("cli tree-sitter resources", () => {
   it("copies seccomp licensing when bundled Bubblewrap is omitted", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "kilo-vscode-seccomp-license-"))
     try {
-      const source = path.join(root, "dist", "bin", "kilo")
-      const target = path.join(root, "extension", "bin", "kilo")
+      const source = path.join(root, "dist", "bin", "genix-cli")
+      const target = path.join(root, "extension", "bin", "genix-cli")
       const relay = path.join(path.dirname(source), "kilo-sandbox-network-relay.js")
       const seccomp = path.join(path.dirname(source), "kilo-sandbox-seccomp")
       const license = path.join(path.dirname(source), "licenses", "sandbox-runtime", "LICENSE")
@@ -207,8 +207,8 @@ describe("cli tree-sitter resources", () => {
   it("removes stale sandbox resources when the source has none", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "kilo-vscode-sandbox-stale-"))
     try {
-      const source = path.join(root, "dist", "bin", "kilo")
-      const target = path.join(root, "extension", "bin", "kilo")
+      const source = path.join(root, "dist", "bin", "genix-cli")
+      const target = path.join(root, "extension", "bin", "genix-cli")
       const helper = path.join(path.dirname(target), "bwrap")
       const license = path.join(path.dirname(target), "licenses", "bubblewrap", "COPYING")
 
@@ -282,8 +282,8 @@ describe("toErrorMessage", () => {
   })
 
   it("includes CLI path in userDetails when provided", () => {
-    const result = toErrorMessage("startup failed", [], "/usr/local/bin/kilo")
-    expect(result.userDetails).toContain("CLI path: /usr/local/bin/kilo")
+    const result = toErrorMessage("startup failed", [], "/usr/local/bin/genix-cli")
+    expect(result.userDetails).toContain("CLI path: /usr/local/bin/genix-cli")
   })
 
   it("does not include CLI path in userDetails when not provided", () => {

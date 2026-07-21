@@ -89,6 +89,10 @@ delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
 // Use in-memory sqlite
 process.env["KILO_DB"] = ":memory:"
 
+// fork_change - disable the fork's hardcoded provider lock during tests so the
+// upstream provider pipeline (anthropic/openai/bedrock/etc.) is exercised unmodified.
+process.env["KILO_FORK_DISABLE_PROVIDER_LOCK"] = "1"
+
 // Now safe to import from src/
 const { initProjectors } = await import("../src/server/projectors")
 // kilocode_change: bind the package memory effect layer to opencode for tests (paths/instance/log/events)

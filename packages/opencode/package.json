@@ -17,8 +17,7 @@
     "test:ci": "bun run script/test-runner.ts --ci"
   },
   "bin": {
-    "kilo": "./bin/kilo",
-    "kilocode": "./bin/kilo"
+    "genix-cli": "./bin/genix-cli"
   },
   "exports": {
     "./*": "./src/*.ts"

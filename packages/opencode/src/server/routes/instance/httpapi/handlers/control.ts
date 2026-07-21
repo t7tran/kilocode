@@ -5,8 +5,13 @@ import {
   invalidatePresence,
 } from "@/kilocode/server/provider-auth-lifecycle"
 // kilocode_change end
+// fork_change start
+import { isLockedProvider } from "@/fork/lock"
+import * as Log from "@opencode-ai/core/util/log"
+// fork_change end
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiError } from "effect/unstable/httpapi" // fork_change
 import { RootHttpApi } from "../api"
 import { LogInput } from "../groups/control"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -20,6 +25,13 @@ export const controlHandlers = HttpApiBuilder.group(RootHttpApi, "control", (han
       params: { providerID: ProviderV2.ID }
       payload: Auth.Info
     }) {
+      // fork_change start
+      if (!isLockedProvider(ctx.params.providerID)) {
+        const logger = Log.create({ service: "fork.control" })
+        logger.warn("rejected auth.set for non-locked provider", { providerID: ctx.params.providerID })
+        return yield* Effect.fail(new HttpApiError.BadRequest({}))
+      }
+      // fork_change end
       yield* auth.set(ctx.params.providerID, ctx.payload).pipe(Effect.orDie)
       // kilocode_change start - drop old presence socket before instance disposal on Kilo auth changes
       if (ctx.params.providerID === "kilo") yield* invalidatePresence()
@@ -31,6 +43,13 @@ export const controlHandlers = HttpApiBuilder.group(RootHttpApi, "control", (han
     const authRemove = Effect.fn("ControlHttpApi.authRemove")(function* (ctx: {
       params: { providerID: ProviderV2.ID }
     }) {
+      // fork_change start
+      if (!isLockedProvider(ctx.params.providerID)) {
+        const logger = Log.create({ service: "fork.control" })
+        logger.warn("rejected auth.remove for non-locked provider", { providerID: ctx.params.providerID })
+        return yield* Effect.fail(new HttpApiError.BadRequest({}))
+      }
+      // fork_change end
       // kilocode_change start
       yield* removeAuth(ctx.params.providerID)
       if (ctx.params.providerID === "kilo") yield* invalidatePresence()
