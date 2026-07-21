@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8"))
 
-// kilocode_change start - variant detection matching bin/kilo logic
+// kilocode_change start - variant detection matching bin/genix-cli logic
 const platformMap = {
   darwin: "darwin",
   linux: "linux",
@@ -26,7 +26,7 @@ const archMap = {
 const platform = platformMap[os.platform()] ?? os.platform()
 const arch = archMap[os.arch()] ?? os.arch()
 const base = `@kilocode/cli-${platform}-${arch}`
-const sourceBinary = platform === "windows" ? "kilo.exe" : "kilo"
+const sourceBinary = platform === "windows" ? "genix-cli.exe" : "genix-cli"
 const targetBinary = path.join(__dirname, "bin", ".kilo")
 
 function supportsAvx2() {
@@ -208,7 +208,7 @@ function main() {
   }
 
   throw new Error(
-    `It seems your package manager failed to install the right Kilo CLI package. Try manually installing ${packageNames()
+    `It seems your package manager failed to install the right Genix Kilo CLI package. Try manually installing ${packageNames()
       .map((name) => JSON.stringify(name))
       .join(" or ")}.`,
   )
@@ -217,6 +217,6 @@ function main() {
 try {
   main()
 } catch (error) {
-  console.error("Failed to setup kilo binary:", error.message)
+  console.error("Failed to setup genix-cli binary:", error.message)
   process.exit(1)
 }

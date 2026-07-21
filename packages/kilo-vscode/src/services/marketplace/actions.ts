@@ -1,12 +1,8 @@
 import * as path from "path"
 import * as vscode from "vscode"
 import type { KiloConnectionService } from "../cli-backend"
-import { retry } from "../cli-backend/retry"
 import type { MarketplaceService } from "."
 import type {
-  InstallMarketplaceItemOptions,
-  InstallResult,
-  MarketplaceDataResponse,
   MarketplaceItem,
   MarketplaceItemRef,
   RemoveResult,
@@ -22,37 +18,6 @@ export interface MarketplaceRemoveContext {
   connection: KiloConnectionService
   storage?: vscode.Uri
   remove: (item: MarketplaceItemRef, scope: "project" | "global", project?: string) => Promise<RemoveResult>
-}
-
-export async function fetchMarketplaceData(
-  ctx: MarketplaceActionContext,
-  project: string | undefined,
-  dir: string | undefined,
-  roots: readonly vscode.Uri[],
-): Promise<MarketplaceDataResponse> {
-  const skills = dir ? await fetchSkills(ctx, dir) : undefined
-  return ctx.marketplace.fetchData(project, skills, roots)
-}
-
-export async function installMarketplaceItem(
-  ctx: MarketplaceActionContext,
-  item: MarketplaceItem,
-  opts: InstallMarketplaceItemOptions,
-  project: string | undefined,
-  dir: string,
-): Promise<InstallResult> {
-  const scope = opts.target ?? "project"
-  if (scope === "project" && !project) {
-    return { success: false, slug: item.id, error: "No workspace directory for project-scope install" }
-  }
-
-  try {
-    const result = await ctx.marketplace.install(item, opts, project)
-    if (result.success) await invalidate(ctx, scope, scope === "project" ? project! : dir)
-    return result
-  } catch (err) {
-    return { success: false, slug: item.id, error: String(err) }
-  }
 }
 
 export async function removeMarketplaceItem(
@@ -92,17 +57,6 @@ export async function removeMarketplaceItemFromAllScopes(
   } catch (err) {
     console.warn("[Kilo New] Marketplace removal failed:", err)
     return false
-  }
-}
-
-async function fetchSkills(ctx: MarketplaceActionContext, dir: string) {
-  try {
-    const client = await ctx.connection.getClientAsync(dir)
-    const { data } = await retry(() => client.app.skills({ directory: dir }, { throwOnError: true }))
-    return data
-  } catch (err) {
-    console.warn("[Kilo New] Failed to fetch CLI skills for marketplace:", err)
-    return undefined
   }
 }
 

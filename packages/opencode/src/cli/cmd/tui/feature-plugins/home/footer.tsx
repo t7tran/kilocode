@@ -50,7 +50,10 @@ function Version(props: { api: TuiPluginApi }) {
 
   return (
     <box flexShrink={0}>
-      <text fg={theme().textMuted}>{props.api.app.version}</text>
+      {/* kilocode_change - show "Genix CLI" brand prefix before the version */}
+      <text fg={theme().textMuted}>
+        Genix CLI {props.api.app.version}
+      </text>
     </box>
   )
 }

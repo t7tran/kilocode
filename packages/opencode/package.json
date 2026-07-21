@@ -19,8 +19,7 @@
     "db": "bun drizzle-kit"
   },
   "bin": {
-    "kilo": "./bin/kilo",
-    "kilocode": "./bin/kilo"
+    "genix-cli": "./bin/genix-cli"
   },
   "exports": {
     "./*": "./src/*.ts"

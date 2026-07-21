@@ -3,11 +3,11 @@ import { mkdir, mkdtemp, rm, writeFile } from "fs/promises"
 import { tmpdir } from "os"
 import { join } from "path"
 
-const script = join(import.meta.dir, "..", "..", "bin", "kilo")
+const script = join(import.meta.dir, "..", "..", "bin", "genix-cli")
 const platform = process.platform === "win32" ? "windows" : process.platform
-const binary = platform === "windows" ? "kilo.exe" : "kilo"
+const binary = platform === "windows" ? "genix-cli.exe" : "genix-cli"
 
-describe("bin/kilo tree-sitter resources", () => {
+describe("bin/genix-cli tree-sitter resources", () => {
   async function setup(root: string, nested: boolean) {
     const dir = nested
       ? join(root, "node_modules", "@kilocode", `cli-${platform}-${process.arch}`, "bin")
@@ -20,7 +20,7 @@ describe("bin/kilo tree-sitter resources", () => {
     await writeFile(join(wasm, "tree-sitter.wasm"), "wasm")
     await writeFile(bin, "binary")
 
-    return { bin, log, wasm, wrapper: join(dir, "kilo") }
+    return { bin, log, wasm, wrapper: join(dir, "genix-cli") }
   }
 
   async function run(root: string, bin: string | undefined, log: string, wrapper?: string, failCached?: boolean) {

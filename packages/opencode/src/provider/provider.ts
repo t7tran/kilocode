@@ -42,6 +42,9 @@ import {
 } from "@/kilocode/provider/provider"
 import * as ModelsRefresh from "@/kilocode/provider/models-refresh"
 // kilocode_change end
+// fork_change start
+import { lockedConfigEntry, isLockedProvider, lockActive } from "@/fork/lock"
+// fork_change end
 import { ProviderError } from "./error"
 
 const log = Log.create({ service: "provider" })
@@ -1299,10 +1302,26 @@ export const layer = Layer.effect(
 
         // now read config providers - includes any modifications from plugin config() hook
         const configProviders = Object.entries(cfg.provider ?? {})
+        // fork_change start - inject the locked Genix provider with its hardcoded identity
+        // (id, name, baseURL) ahead of any user config. A user-supplied entry for the same
+        // id (apiKey, models, etc.) is kept and deep-merged after the locked entry by the
+        // config-provider loop below. User entries for any other provider id are filtered
+        // out after the providers map is assembled. Skipped when the fork lock is disabled
+        // (tests) so the upstream provider pipeline is exercised unmodified.
+        const configProvidersMerged: typeof configProviders = lockActive()
+          ? (() => {
+              const [lockedID, lockedCfg] = lockedConfigEntry()
+              return [[lockedID, lockedCfg] as (typeof configProviders)[number], ...configProviders]
+            })()
+          : configProviders
+        // fork_change end
         const disabled = new Set(cfg.disabled_providers ?? [])
         const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
 
         function isProviderAllowed(providerID: ProviderID): boolean {
+          // fork_change start - hard lock: only the locked provider is ever allowed
+          if (!isLockedProvider(providerID)) return false
+          // fork_change end
           if (enabled && !enabled.has(providerID)) return false
           if (disabled.has(providerID)) return false
           return true
@@ -1336,7 +1355,7 @@ export const layer = Layer.effect(
         }
 
         // extend database from config
-        for (const [providerID, provider] of configProviders) {
+        for (const [providerID, provider] of configProvidersMerged) { // fork_change
           if (!provider) continue // kilocode_change - null entries are transient delete sentinels
           const existing = database[providerID]
           const parsed: Info = {

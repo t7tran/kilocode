@@ -73,7 +73,7 @@ export const DevSetupCommand = cmd({
     }
 
     UI.empty()
-    UI.println(`  ${B}Kilo CLI dev launcher setup${N}`)
+    UI.println(`  ${B}Genix Agent CLI dev launcher setup${N}`)
     UI.empty()
     UI.println(`  ${D}Repo:${N}    ${repo}`)
     UI.println(`  ${D}Shell:${N}   ${shell}${args.shell ? "" : `  ${D}(detected from $SHELL)${N}`}`)
@@ -301,7 +301,7 @@ export async function detectRepo(): Promise<string> {
   if (meta && !isBunfsPath(meta)) candidates.push(path.dirname(meta))
 
   // process.execPath points at the binary itself; walk up from its directory.
-  // For a local build it's <repo>/packages/opencode/dist/<target>/bin/kilo, so
+  // For a local build it's <repo>/packages/opencode/dist/<target>/bin/genix-cli, so
   // findRepoFrom eventually hits the repo's packages/opencode/package.json.
   if (process.execPath) candidates.push(path.dirname(process.execPath))
   candidates.push(process.cwd())

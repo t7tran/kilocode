@@ -30,14 +30,14 @@ if (!existsSync(cliDistDir)) {
 }
 
 const targets = [
-  { target: "linux-x64", cliDir: "@kilocode/cli-linux-x64", binary: "kilo" },
-  { target: "linux-arm64", cliDir: "@kilocode/cli-linux-arm64", binary: "kilo" },
-  { target: "alpine-x64", cliDir: "@kilocode/cli-linux-x64-musl", binary: "kilo" },
-  { target: "alpine-arm64", cliDir: "@kilocode/cli-linux-arm64-musl", binary: "kilo" },
-  { target: "darwin-x64", cliDir: "@kilocode/cli-darwin-x64", binary: "kilo" },
-  { target: "darwin-arm64", cliDir: "@kilocode/cli-darwin-arm64", binary: "kilo" },
-  { target: "win32-x64", cliDir: "@kilocode/cli-windows-x64", binary: "kilo.exe" },
-  { target: "win32-arm64", cliDir: "@kilocode/cli-windows-arm64", binary: "kilo.exe" },
+  { target: "linux-x64", cliDir: "@kilocode/cli-linux-x64", binary: "genix-cli" },
+  { target: "linux-arm64", cliDir: "@kilocode/cli-linux-arm64", binary: "genix-cli" },
+  { target: "alpine-x64", cliDir: "@kilocode/cli-linux-x64-musl", binary: "genix-cli" },
+  { target: "alpine-arm64", cliDir: "@kilocode/cli-linux-arm64-musl", binary: "genix-cli" },
+  { target: "darwin-x64", cliDir: "@kilocode/cli-darwin-x64", binary: "genix-cli" },
+  { target: "darwin-arm64", cliDir: "@kilocode/cli-darwin-arm64", binary: "genix-cli" },
+  { target: "win32-x64", cliDir: "@kilocode/cli-windows-x64", binary: "genix-cli.exe" },
+  { target: "win32-arm64", cliDir: "@kilocode/cli-windows-arm64", binary: "genix-cli.exe" },
 ]
 
 const binDir = join(import.meta.dir, "..", "bin")
@@ -75,7 +75,8 @@ for (const config of targets) {
   const targetBinary = join(binDir, config.binary)
 
   if (!existsSync(sourceBinary)) {
-    throw new Error(`CLI binary not found at ${sourceBinary}`)
+    console.log(`  ⏭️  Skipping ${config.target}: CLI binary not found at ${sourceBinary}`)
+    continue
   }
 
   console.log(`  📥 Copying binary from ${config.cliDir}/bin/${config.binary}...`)
@@ -84,7 +85,7 @@ for (const config of targets) {
   await copySandboxResources(sourceBinary, targetBinary)
   await copyKiloSandboxWorker(sourceBinary, targetBinary)
 
-  if (config.binary !== "kilo.exe") {
+  if (config.binary !== "genix-cli.exe") {
     chmodSync(targetBinary, 0o755)
   }
 

@@ -67,6 +67,10 @@ delete process.env["KILO_SERVER_USERNAME"]
 // Use in-memory sqlite
 process.env["KILO_DB"] = ":memory:"
 
+// fork_change - disable the fork's hardcoded provider lock during tests so the
+// upstream provider pipeline (anthropic/openai/bedrock/etc.) is exercised unmodified.
+process.env["KILO_FORK_DISABLE_PROVIDER_LOCK"] = "1"
+
 // Now safe to import from src/
 const { Log } = await import("@opencode-ai/core/util/log")
 const { initProjectors } = await import("../src/server/projectors")

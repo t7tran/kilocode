@@ -1,0 +1,199 @@
+# fork_change - new file
+#
+# Publishes fork builds:
+#   - .vsix extension files as GitHub Releases
+#   - CLI npm packages under the "genix-cli" name
+#
+# Triggers on version tags (v*) and manual workflow_dispatch.
+#
+# This workflow reuses existing packaging scripts:
+#   - packages/opencode/script/build.ts (CLI binary, all platforms)
+#   - packages/kilo-vscode/script/build.ts (multi-platform .vsix from CLI dist)
+#   - packages/opencode/script/fork-publish.ts (npm publish with package rename)
+#
+# It does NOT touch Kilo's own publish.yml or beta.yml.
+
+name: fork-publish
+run-name: "Fork release ${{ github.ref_name }}"
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to release (e.g. v1.0.0)"
+        required: false
+        type: string
+      skip-npm:
+        description: "Skip npm publish (only build .vsix for GitHub Release)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency: fork-publish-${{ github.ref }}
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Build CLI binaries for all platforms (needed by both vsix and npm jobs)
+  # -----------------------------------------------------------------------
+  build-cli:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-bun
+
+      # build.ts calls stageBubblewrap() for the Linux targets, which shells out
+      # to `zig cc` to compile the bundled bubblewrap helper. Without Zig on PATH
+      # the build fails early with: Executable not found in $PATH: "zig".
+      # Mirrors the "Setup Zig for Linux sandbox helpers" step in publish.yml.
+      - &zigsetup
+        name: Setup Zig for Linux sandbox helpers
+        run: |
+          curl --fail --location --retry 3 \
+            https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz \
+            --output "$RUNNER_TEMP/zig.tar.xz"
+          echo "473ec26806133cf4d1918caf1a410f8403a13d979726a9045b421b685031a982  $RUNNER_TEMP/zig.tar.xz" | sha256sum --check --status
+          tar -xJf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/zig-linux-x86_64-0.14.0" >> "$GITHUB_PATH"
+
+      - name: Determine version
+        id: ver
+        run: |
+          raw="${{ inputs.version || github.ref_name }}"
+          # strip leading "v" — build.ts/fork-publish.ts prepend "v" when tagging releases
+          ver="${raw#v}"
+          echo "version=${ver}" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft GitHub release
+        # build.ts runs `gh release upload v<version>` when KILO_RELEASE is set;
+        # the release must exist first (same as script/version.ts in the normal flow).
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="v${{ steps.ver.outputs.version }}"
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            echo "release ${tag} already exists"
+          else
+            pre_args=()
+            case "${{ steps.ver.outputs.version }}" in
+              *-alpha*|*-beta*|*-rc*|*-pre*) pre_args=(--prerelease) ;;
+            esac
+            gh release create "${tag}" -d --title "${tag}" --notes "" "${pre_args[@]}"
+          fi
+
+      - name: Build CLI binaries (all platforms)
+        run: ./packages/opencode/script/build.ts
+        env:
+          KILO_VERSION: ${{ steps.ver.outputs.version }}
+          KILO_RELEASE: "true"
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+
+      - name: Pack CLI dist into tar.zst
+        run: |
+          find packages/opencode/dist -name '*.map' -delete
+          tar --zstd -cf /tmp/kilo-cli.tar.zst -C packages/opencode/dist .
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: /tmp/kilo-cli.tar.zst
+          archive: false
+
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+
+  # -----------------------------------------------------------------------
+  # Build .vsix packages and upload to GitHub Release
+  # -----------------------------------------------------------------------
+  build-vscode:
+    needs: build-cli
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-bun
+
+      - name: Install @vscode/vsce
+        run: bun install -g @vscode/vsce
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: kilo-cli.tar.zst
+          path: /tmp
+          skip-decompress: true
+
+      - name: Unpack CLI dist
+        run: |
+          mkdir -p packages/opencode/dist
+          tar --zstd -xf /tmp/kilo-cli.tar.zst -C packages/opencode/dist
+
+      - name: Build VS Code extension (.vsix packages)
+        run: bun script/build.ts
+        working-directory: ./packages/kilo-vscode
+        env:
+          CLI_DIST_DIR: ../../packages/opencode/dist
+          KILO_VERSION: ${{ needs.build-cli.outputs.version }}
+          KILO_PRE_RELEASE: "false"
+
+      - name: Collect .vsix artifacts
+        run: |
+          mkdir -p release-assets
+          cp packages/kilo-vscode/out/*.vsix release-assets/
+          ls -lh release-assets/
+
+      # Extension point: replace this block with an internal registry publish step
+      # (e.g. curl --upload-file or a custom CLI) to push .vsix files to your
+      # own artifact store instead of GitHub Releases.
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name || inputs.version }}
+          name: ${{ github.ref_name || inputs.version }}
+          generate_release_notes: true
+          files: release-assets/*.vsix
+
+  # -----------------------------------------------------------------------
+  # Publish CLI to npm under "genix-cli" package name
+  # -----------------------------------------------------------------------
+  publish-npm:
+    needs: build-cli
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ inputs.skip-npm != true }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-bun
+
+      - *zigsetup
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # No artifact download: fork-publish.ts re-runs build.ts, which does
+      # `rm -rf dist` and rebuilds every platform package from scratch. Pulling
+      # the build-cli artifact here would just be overwritten. We keep
+      # `needs: build-cli` only for its version output.
+      - name: Publish CLI to npm as kilocode-cli
+        run: ./packages/opencode/script/fork-publish.ts
+        env:
+          KILO_VERSION: ${{ needs.build-cli.outputs.version }}
+          KILO_RELEASE: "true"
+          # NPM_TOKEN is a repo secret — set it in Settings → Secrets.
+          # The fork-publish.ts script reads NODE_AUTH_TOKEN.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}

@@ -68,7 +68,7 @@ function View(props: { api: TuiPluginApi }) {
       </text>
       {/* kilocode_change start */}
       <text fg={theme().textMuted}>
-        <span style={{ fg: theme().success }}>•</span> <b>Kilo</b> <span>{props.api.app.version}</span>
+        <span style={{ fg: theme().success }}>•</span> <b>Genix CLI</b> <span>{props.api.app.version}</span>
       </text>
       {/* kilocode_change end */}
     </box>

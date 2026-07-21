@@ -5,14 +5,13 @@ import { showToast } from "@kilocode/kilo-ui/toast"
 import { useLanguage } from "../../context/language"
 import { useVSCode } from "../../context/vscode"
 import { useConfig } from "../../context/config"
-import type { Config, ConnectionState, ExtensionMessage, MigrationSource } from "../../types/messages"
+import type { Config, ConnectionState, ExtensionMessage } from "../../types/messages"
 import { buildExport, parseImport, MAX_IMPORT_SIZE } from "./settings-io"
 
 export interface AboutKiloCodeTabProps {
   port: number | null
   connectionState: ConnectionState
   extensionVersion?: string
-  onMigrationClick?: (source: MigrationSource) => void // legacy-migration
 }
 
 const AboutKiloCodeTab: Component<AboutKiloCodeTabProps> = (props) => {
@@ -22,10 +21,6 @@ const AboutKiloCodeTab: Component<AboutKiloCodeTabProps> = (props) => {
   const [importing, setImporting] = createSignal(false)
   const [exporting, setExporting] = createSignal(false)
   let epoch = 0
-
-  const open = (url: string) => {
-    vscode.postMessage({ type: "openExternal", url })
-  }
 
   const importConfig = (config: Config) => {
     const enabled = config.indexing?.enabled
@@ -151,12 +146,6 @@ const AboutKiloCodeTab: Component<AboutKiloCodeTabProps> = (props) => {
     }
   }
 
-  const linkStyle = {
-    color: "var(--vscode-textLink-foreground)",
-    "text-decoration": "none",
-    cursor: "pointer",
-  } as const
-
   const sectionStyle = {
     background: "var(--vscode-editor-background)",
     border: "1px solid var(--vscode-panel-border)",
@@ -194,47 +183,6 @@ const AboutKiloCodeTab: Component<AboutKiloCodeTabProps> = (props) => {
           <span style={labelStyle}>{language.t("settings.aboutKiloCode.version.label")}</span>
           <span style={valueStyle}>{props.extensionVersion ?? "—"}</span>
         </div>
-      </div>
-
-      {/* Community & Support */}
-      <div style={sectionStyle}>
-        <h4 style={headingStyle}>{language.t("settings.aboutKiloCode.community")}</h4>
-        <p
-          style={{
-            "font-size": "var(--kilo-font-size-12)",
-            color: "var(--vscode-descriptionForeground)",
-            margin: "0 0 12px 0",
-            "line-height": "1.5",
-          }}
-        >
-          {language.t("settings.aboutKiloCode.feedback.prefix")}{" "}
-          <span style={linkStyle} onClick={() => open("https://github.com/Kilo-Org/kilocode")}>
-            GitHub
-          </span>
-          ,{" "}
-          <span style={linkStyle} onClick={() => open("https://reddit.com/r/kilocode")}>
-            Reddit
-          </span>
-          , {language.t("settings.aboutKiloCode.feedback.or")}{" "}
-          <span style={linkStyle} onClick={() => open("https://kilo.ai/discord")}>
-            Discord
-          </span>
-          .
-        </p>
-        <p
-          style={{
-            "font-size": "var(--kilo-font-size-12)",
-            color: "var(--vscode-descriptionForeground)",
-            margin: 0,
-            "line-height": "1.5",
-          }}
-        >
-          {language.t("settings.aboutKiloCode.support.prefix")}{" "}
-          <span style={linkStyle} onClick={() => open("https://kilo.ai/support")}>
-            kilo.ai/support
-          </span>
-          .
-        </p>
       </div>
 
       {/* Telemetry */}
@@ -314,35 +262,6 @@ const AboutKiloCodeTab: Component<AboutKiloCodeTabProps> = (props) => {
           </Button>
         </div>
       </div>
-
-      {/* legacy-migration start */}
-      <div style={{ ...sectionStyle, "margin-bottom": "0" }}>
-        <h4 style={headingStyle}>{language.t("settings.aboutKiloCode.legacyMigration.title")}</h4>
-        <p
-          style={{
-            "font-size": "var(--kilo-font-size-12)",
-            color: "var(--vscode-descriptionForeground)",
-            margin: "0 0 12px 0",
-            "line-height": "1.5",
-          }}
-        >
-          {language.t("settings.aboutKiloCode.legacyMigration.description")}
-        </p>
-        <div style={{ display: "flex", gap: "8px", "flex-wrap": "wrap" }}>
-          <Button variant="secondary" size="small" onClick={() => props.onMigrationClick?.("legacy")}>
-            {language.t("settings.legacyMigration.link")}
-          </Button>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => props.onMigrationClick?.("roo")}
-            title={language.t("settings.aboutKiloCode.rooImport.description")}
-          >
-            {language.t("settings.aboutKiloCode.rooImport.button")}
-          </Button>
-        </div>
-      </div>
-      {/* legacy-migration end */}
 
       {/* Reset Settings */}
       <div style={sectionStyle}>

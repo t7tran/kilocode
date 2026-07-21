@@ -62,7 +62,7 @@ function Version(props: { api: TuiPluginApi }) {
 
   return (
     <box flexShrink={0}>
-      <text fg={theme().textMuted}>{props.api.app.version}</text>
+      <text fg={theme().textMuted}>Genix CLI {props.api.app.version}</text>
     </box>
   )
 }
