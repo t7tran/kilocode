@@ -60,7 +60,7 @@ export const Info = Schema.Struct({
 export type Info = Schema.Schema.Type<typeof Info>
 
 export function userAgent(client = "cli") {
-  return `kilo/${InstallationChannel}/${InstallationVersion}/${client}` // kilocode_change
+  return `genix-cli/${InstallationChannel}/${InstallationVersion}/${client}` // kilocode_change
 }
 
 export const USER_AGENT = userAgent()

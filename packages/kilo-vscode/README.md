@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img width="100%" alt="Kilo Code running inside VS Code" src="https://kilo.ai/_next/image?url=%2Fscreenshots%2Fvs-code%2Fvs-code-home-page-screenshot.png&w=3840&q=75">
+  <img width="100%" alt="Genix Code running inside VS Code" src="https://kilo.ai/_next/image?url=%2Fscreenshots%2Fvs-code%2Fvs-code-home-page-screenshot.png&w=3840&q=75">
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@
 
 ## Get Started
 
-1. Install the Kilo Code extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=kilocode.Kilo-Code).
+1. Install the Genix Code extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=kilocode.Kilo-Code).
 2. Create your account to access 500+ cutting-edge AI models including GPT-5.5, Claude Opus 4.7, Claude Sonnet 4.6, and Gemini 3.1 Pro Preview, with transparent pricing that matches provider rates exactly.
 3. Start coding with AI that adapts to your workflow. Watch our quick-start guide to see Kilo in action:
 

@@ -31,7 +31,7 @@ import { normalizeForSnapshot, PATH_SEP } from "../../lib/snapshot"
 //      line-wraps onto a fresh line on Windows). `\s+` matches both forms.
 function normalize(text: string): string {
   // kilocode_change start - snapshot Kilo help independently of lifecycle logs
-  const help = text.slice(text.indexOf("kilo "))
+  const help = text.slice(text.indexOf("genix-cli "))
   const output = help
     .replace(/(?=INFO  \d{4}-\d{2}-\d{2}).*$/s, "")
     .replace(/ {4}(?=\[aliases: ls\])/g, "")
@@ -130,7 +130,7 @@ describe("Kilo CLI help-text snapshots", () => {
             Effect.gen(function* () {
               const result = yield* opencode.spawn([...argv, "--help"], { env: SNAPSHOT_ENV })
               if (result.exitCode !== 0) {
-                return yield* Effect.fail(`kilo ${argv.join(" ")}: exit ${result.exitCode}`) // kilocode_change
+                return yield* Effect.fail(`genix-cli ${argv.join(" ")}: exit ${result.exitCode}`) // kilocode_change
               }
               return { argv, result }
             }),
@@ -141,7 +141,7 @@ describe("Kilo CLI help-text snapshots", () => {
           // yargs writes --help to stderr, not stdout. Snapshotting stderr
           // means our test catches the help body; stdout for these commands
           // is expected to be empty.
-          expect(normalize(result.stderr)).toMatchSnapshot(`kilo ${argv.join(" ")} --help`) // kilocode_change
+          expect(normalize(result.stderr)).toMatchSnapshot(`genix-cli ${argv.join(" ")} --help`) // kilocode_change
         }
         if (failures.length > 0) {
           throw new Error(`Help text failed for:\n  ${failures.join("\n  ")}`)

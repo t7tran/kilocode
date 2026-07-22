@@ -622,20 +622,20 @@ export class WorktreeManager {
     const gitDir = await this.resolveGitDir()
     const excludePath = path.join(gitDir, "info", "exclude")
     const items = [
-      [".kilo/worktrees/", "Kilo Code agent worktrees"],
+      [".kilo/worktrees/", "Genix Code agent worktrees"],
       [".kilo/agent-manager.json", "Kilo Agent Manager state"],
-      [".kilo/setup-script", "Kilo Code worktree setup script"],
-      [".kilo/setup-script.sh", "Kilo Code worktree setup script"],
-      [".kilo/setup-script.ps1", "Kilo Code worktree setup script"],
-      [".kilo/setup-script.cmd", "Kilo Code worktree setup script"],
-      [".kilo/setup-script.bat", "Kilo Code worktree setup script"],
-      [".kilocode/worktrees/", "Kilo Code legacy agent worktrees"],
+      [".kilo/setup-script", "Genix Code worktree setup script"],
+      [".kilo/setup-script.sh", "Genix Code worktree setup script"],
+      [".kilo/setup-script.ps1", "Genix Code worktree setup script"],
+      [".kilo/setup-script.cmd", "Genix Code worktree setup script"],
+      [".kilo/setup-script.bat", "Genix Code worktree setup script"],
+      [".kilocode/worktrees/", "Genix Code legacy agent worktrees"],
       [".kilocode/agent-manager.json", "Kilo Agent Manager legacy state"],
-      [".kilocode/setup-script", "Kilo Code legacy worktree setup script"],
-      [".kilocode/setup-script.sh", "Kilo Code legacy worktree setup script"],
-      [".kilocode/setup-script.ps1", "Kilo Code legacy worktree setup script"],
-      [".kilocode/setup-script.cmd", "Kilo Code legacy worktree setup script"],
-      [".kilocode/setup-script.bat", "Kilo Code legacy worktree setup script"],
+      [".kilocode/setup-script", "Genix Code legacy worktree setup script"],
+      [".kilocode/setup-script.sh", "Genix Code legacy worktree setup script"],
+      [".kilocode/setup-script.ps1", "Genix Code legacy worktree setup script"],
+      [".kilocode/setup-script.cmd", "Genix Code legacy worktree setup script"],
+      [".kilocode/setup-script.bat", "Genix Code legacy worktree setup script"],
     ] as const
 
     for (const [entry, comment] of items) {

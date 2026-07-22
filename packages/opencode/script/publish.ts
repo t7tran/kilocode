@@ -53,8 +53,7 @@ await Bun.file(`./dist/${pkg.name}/package.json`).write(
       name: pkg.name, // kilocode_change
       bin: {
         // kilocode_change start
-        kilo: `./bin/kilo`,
-        kilocode: `./bin/kilo`,
+        "genix-cli": `./bin/genix-cli`,
         // kilocode_change end
       },
       scripts: {
@@ -94,10 +93,10 @@ const tagFlags = tags.flatMap((t) => ["-t", t])
 if (!Script.preview) {
   await $`docker buildx build --platform ${platforms} ${tagFlags} --push .`
   // Calculate SHA values
-  const arm64Sha = await $`sha256sum ./dist/kilo-linux-arm64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
-  const x64Sha = await $`sha256sum ./dist/kilo-linux-x64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
-  const macX64Sha = await $`sha256sum ./dist/kilo-darwin-x64.zip | cut -d' ' -f1`.text().then((x) => x.trim())
-  const macArm64Sha = await $`sha256sum ./dist/kilo-darwin-arm64.zip | cut -d' ' -f1`.text().then((x) => x.trim())
+  const arm64Sha = await $`sha256sum ./dist/genix-cli-linux-arm64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
+  const x64Sha = await $`sha256sum ./dist/genix-cli-linux-x64.tar.gz | cut -d' ' -f1`.text().then((x) => x.trim())
+  const macX64Sha = await $`sha256sum ./dist/genix-cli-darwin-x64.zip | cut -d' ' -f1`.text().then((x) => x.trim())
+  const macArm64Sha = await $`sha256sum ./dist/genix-cli-darwin-arm64.zip | cut -d' ' -f1`.text().then((x) => x.trim())
 
   const [pkgver, _subver = ""] = Script.version.split(/(-.*)/, 2)
 
@@ -118,21 +117,21 @@ if (!Script.preview) {
     "conflicts=('kilo')",
     "depends=('ripgrep')",
     "",
-    `source_aarch64=("\${pkgname}_\${pkgver}_aarch64.tar.gz::https://github.com/Kilo-Org/kilocode/releases/download/v\${pkgver}\${_subver}/kilo-linux-arm64.tar.gz")`,
+    `source_aarch64=("\${pkgname}_\${pkgver}_aarch64.tar.gz::https://github.com/Kilo-Org/kilocode/releases/download/v\${pkgver}\${_subver}/genix-cli-linux-arm64.tar.gz")`,
     `sha256sums_aarch64=('${arm64Sha}')`,
 
-    `source_x86_64=("\${pkgname}_\${pkgver}_x86_64.tar.gz::https://github.com/Kilo-Org/kilocode/releases/download/v\${pkgver}\${_subver}/kilo-linux-x64.tar.gz")`,
+    `source_x86_64=("\${pkgname}_\${pkgver}_x86_64.tar.gz::https://github.com/Kilo-Org/kilocode/releases/download/v\${pkgver}\${_subver}/genix-cli-linux-x64.tar.gz")`,
     `sha256sums_x86_64=('${x64Sha}')`,
     "",
     "package() {",
-    '  install -Dm755 ./kilo "${pkgdir}/usr/lib/kilo/kilo"', // kilocode_change
+    '  install -Dm755 ./genix-cli "${pkgdir}/usr/lib/kilo/genix-cli"', // kilocode_change
     '  install -Dm755 ./bwrap "${pkgdir}/usr/lib/kilo/bwrap"', // kilocode_change
     '  install -Dm644 ./kilo-sandbox-mutation-worker.js "${pkgdir}/usr/lib/kilo/kilo-sandbox-mutation-worker.js"', // kilocode_change
     '  install -dm755 "${pkgdir}/usr/bin" "${pkgdir}/usr/lib/kilo/tree-sitter" "${pkgdir}/usr/share/licenses/kilo"', // kilocode_change
     '  cp -r ./tree-sitter/. "${pkgdir}/usr/lib/kilo/tree-sitter/"', // kilocode_change
     '  cp -r ./licenses/. "${pkgdir}/usr/share/licenses/kilo/"', // kilocode_change
-    "  printf '%s\\n' '#!/bin/sh' 'export KILO_TREE_SITTER_WASM_DIR=/usr/lib/kilo/tree-sitter' 'exec /usr/lib/kilo/kilo \"$@\"' > \"${pkgdir}/usr/bin/kilo\"", // kilocode_change
-    '  chmod 755 "${pkgdir}/usr/bin/kilo"', // kilocode_change
+    "  printf '%s\\n' '#!/bin/sh' 'export KILO_TREE_SITTER_WASM_DIR=/usr/lib/kilo/tree-sitter' 'exec /usr/lib/kilo/genix-cli \"$@\"' > \"${pkgdir}/usr/bin/genix-cli\"", // kilocode_change
+    '  chmod 755 "${pkgdir}/usr/bin/genix-cli"', // kilocode_change
     "}",
     "",
   ].join("\n")
@@ -171,40 +170,40 @@ if (!Script.preview) {
     "",
     "  on_macos do",
     "    if Hardware::CPU.intel?",
-    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/kilo-darwin-x64.zip"`,
+    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/genix-cli-darwin-x64.zip"`,
     `      sha256 "${macX64Sha}"`,
     "",
     "      def install",
-    '        libexec.install "kilo", "kilo-sandbox-mutation-worker.js", "tree-sitter"', // kilocode_change
-    '        (bin/"kilo").write_env_script libexec/"kilo", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
+    '        libexec.install "genix-cli", "kilo-sandbox-mutation-worker.js", "tree-sitter"', // kilocode_change
+    '        (bin/"genix-cli").write_env_script libexec/"genix-cli", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
     "      end",
     "    end",
     "    if Hardware::CPU.arm?",
-    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/kilo-darwin-arm64.zip"`,
+    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/genix-cli-darwin-arm64.zip"`,
     `      sha256 "${macArm64Sha}"`,
     "",
     "      def install",
-    '        libexec.install "kilo", "kilo-sandbox-mutation-worker.js", "tree-sitter"', // kilocode_change
-    '        (bin/"kilo").write_env_script libexec/"kilo", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
+    '        libexec.install "genix-cli", "kilo-sandbox-mutation-worker.js", "tree-sitter"', // kilocode_change
+    '        (bin/"genix-cli").write_env_script libexec/"genix-cli", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
     "      end",
     "    end",
     "  end",
     "",
     "  on_linux do",
     "    if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?",
-    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/kilo-linux-x64.tar.gz"`,
+    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/genix-cli-linux-x64.tar.gz"`,
     `      sha256 "${x64Sha}"`,
     "      def install",
-    '        libexec.install "kilo", "bwrap", "kilo-sandbox-mutation-worker.js", "tree-sitter", "licenses"', // kilocode_change
-    '        (bin/"kilo").write_env_script libexec/"kilo", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
+    '        libexec.install "genix-cli", "bwrap", "kilo-sandbox-mutation-worker.js", "tree-sitter", "licenses"', // kilocode_change
+    '        (bin/"genix-cli").write_env_script libexec/"genix-cli", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
     "      end",
     "    end",
     "    if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?",
-    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/kilo-linux-arm64.tar.gz"`,
+    `      url "https://github.com/Kilo-Org/kilocode/releases/download/v${Script.version}/genix-cli-linux-arm64.tar.gz"`,
     `      sha256 "${arm64Sha}"`,
     "      def install",
-    '        libexec.install "kilo", "bwrap", "kilo-sandbox-mutation-worker.js", "tree-sitter", "licenses"', // kilocode_change
-    '        (bin/"kilo").write_env_script libexec/"kilo", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
+    '        libexec.install "genix-cli", "bwrap", "kilo-sandbox-mutation-worker.js", "tree-sitter", "licenses"', // kilocode_change
+    '        (bin/"genix-cli").write_env_script libexec/"genix-cli", KILO_TREE_SITTER_WASM_DIR: libexec/"tree-sitter"', // kilocode_change
     "      end",
     "    end",
     "  end",

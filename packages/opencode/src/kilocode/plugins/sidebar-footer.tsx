@@ -246,7 +246,7 @@ function View(props: { api: TuiPluginApi }) {
       <text fg={theme().textMuted}>
         <span style={{ fg: theme().success }}>•</span>{" "}
         <span style={{ fg: theme().text }}>
-          <b>Kilo</b>
+          <b>Genix CLI</b>
         </span>{" "}
         <span>{props.api.app.version}</span>
       </text>

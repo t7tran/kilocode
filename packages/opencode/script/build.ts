@@ -93,18 +93,48 @@ function smokeEnv(root: string) {
   }
 }
 
+// fork_change start - this fork hard-locks providers to the single Genix provider
+// (see src/fork/lock.ts). The lock injects the genix provider with its hardcoded
+// identity; the model list and apiKey are supplied via config. The smoke test
+// exercises the locked-provider pipeline with a throwaway model id.
+function smokeEnvLocked(root: string) {
+  const env = { ...process.env }
+  delete env.KILO_MODELS_PATH
+  delete env.KILO_MODELS_URL
+  delete env.KILO_CONFIG
+  delete env.KILO_CONFIG_DIR
+  return {
+    ...env,
+    XDG_DATA_HOME: path.join(root, "data"),
+    XDG_CACHE_HOME: path.join(root, "cache"),
+    XDG_CONFIG_HOME: path.join(root, "config"),
+    XDG_STATE_HOME: path.join(root, "state"),
+    KILO_DISABLE_MODELS_FETCH: "1",
+    KILO_DISABLE_PROJECT_CONFIG: "1",
+    KILO_CONFIG_CONTENT: JSON.stringify({
+      provider: {
+        genix: {
+          options: { apiKey: "smoke-key" },
+          models: { "smoke-chat": { name: "Smoke Chat" } },
+        },
+      },
+    }),
+  }
+}
+
 async function smokeModels(binaryPath: string) {
   const root = await fs.promises.mkdtemp(path.join(os.tmpdir(), "kilo-models-"))
   try {
-    const out = await $`${binaryPath} --pure models anthropic`.env(smokeEnv(root)).text()
-    if (out.split(/\r?\n/).some((line) => line.startsWith("anthropic/"))) return
-    throw new Error("Compiled binary did not list Anthropic models from the embedded snapshot")
+    const out = await $`${binaryPath} --pure models genix`.env(smokeEnvLocked(root)).text()
+    if (out.split(/\r?\n/).some((line) => line.startsWith("genix/"))) return
+    throw new Error("Compiled binary did not list the locked genix provider's models")
   } finally {
     await fs.promises
       .rm(root, { recursive: true, force: true })
       .catch((err) => console.warn(`Failed to remove smoke test directory ${root}`, err))
   }
 }
+// fork_change end
 
 // Kilo dropped the packages/app web UI. Kept here as a commented reference so future upstream merges
 // can see the deliberate divergence rather than treating a re-add as a clean re-introduction.
@@ -290,8 +320,8 @@ for (const item of targets) {
       autoloadPackageJson: true,
       target: name.replace(pkg.name, "bun") as any,
       // kilocode_change start
-      outfile: `dist/${name}/bin/kilo`,
-      execArgv: [`--user-agent=kilo/${Script.version}`, "--use-system-ca", "--"],
+      outfile: `dist/${name}/bin/genix-cli`,
+      execArgv: [`--user-agent=genix-cli/${Script.version}`, "--use-system-ca", "--"],
       // kilocode_change end
       windows: {},
     },
@@ -341,7 +371,7 @@ for (const item of targets) {
     const interpreter = interpreters[key]
     if (interpreter) {
       try {
-        await $`patchelf --set-interpreter ${interpreter} dist/${name}/bin/kilo`
+        await $`patchelf --set-interpreter ${interpreter} dist/${name}/bin/genix-cli`
         console.log(`patched interpreter for ${name} -> ${interpreter}`)
       } catch {
         console.warn(`patchelf not available, skipping interpreter fix for ${name}`)
@@ -352,13 +382,13 @@ for (const item of targets) {
 
   // Smoke test: only run if binary is for current platform
   if (item.os === process.platform && item.arch === process.arch && !item.abi) {
-    const binaryPath = `dist/${name}/bin/kilo` // kilocode_change
+    const binaryPath = `dist/${name}/bin/genix-cli` // kilocode_change
     console.log(`Running smoke test: ${binaryPath} --version`)
     try {
       const versionOutput = await $`${binaryPath} --version`.text()
       console.log(`Smoke test passed: ${versionOutput.trim()}`)
       // kilocode_change start
-      console.log(`Running smoke test: ${binaryPath} --pure models anthropic`)
+      console.log(`Running smoke test: ${binaryPath} --pure models genix`)
       await smokeModels(binaryPath)
       console.log("Models snapshot smoke test passed")
       await KiloSandboxWorker.smoke(binaryPath)
@@ -416,7 +446,7 @@ for (const item of targets) {
 if (Script.release) {
   const archives: string[] = [] // kilocode_change
   for (const key of Object.keys(binaries)) {
-    const archive = key.replace(pkg.name, "kilo") // kilocode_change
+    const archive = key.replace(pkg.name, "genix-cli") // kilocode_change
     if (key.includes("linux")) {
       // kilocode_change start
       const out = path.resolve("dist", `${archive}.tar.gz`)

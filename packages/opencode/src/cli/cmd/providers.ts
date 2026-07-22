@@ -18,6 +18,7 @@ import { errorMessage } from "@/util/error"
 import { text } from "node:stream/consumers"
 import { Effect, Option } from "effect"
 import { remove as removeAuth } from "@/kilocode/auth/remove" // kilocode_change
+import { lockActive, lockedProvider } from "@/fork/lock" // fork_change
 
 type PluginAuth = NonNullable<Hooks["auth"]>
 
@@ -36,6 +37,37 @@ const cliTry = <Value>(message: string, fn: () => PromiseLike<Value>) =>
     try: fn,
     catch: (error) => new CliError({ message: message + errorMessage(error) }),
   })
+
+// fork_change start - fetch the locked provider's model list from its OpenAI-compatible
+// /models endpoint so the CLI login can persist it to config. Without models in config the
+// locked provider has zero models and is dropped from the provider map (see provider.ts),
+// so it never appears connected. Mirrors the extension's ensureGenixModels. See FORK.md.
+const fetchLockedModels = (baseURL: string, apiKey: string) =>
+  Effect.tryPromise({
+    try: async () => {
+      const url = baseURL.replace(/\/+$/, "") + "/models"
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(15_000),
+      })
+      if (!res.ok) {
+        const body = await res.text().catch(() => "")
+        throw new Error(`HTTP ${res.status}${body ? `: ${body.slice(0, 200)}` : ""}`)
+      }
+      const json = (await res.json()) as { data?: Array<{ id?: string; name?: string }> }
+      const items = Array.isArray(json?.data) ? json.data : []
+      const models: Record<string, { name: string }> = {}
+      for (const item of items) {
+        const id = typeof item?.id === "string" ? item.id.trim() : ""
+        if (!id) continue
+        models[id] = { name: typeof item?.name === "string" && item.name.trim() ? item.name.trim() : id }
+      }
+      return models
+    },
+    catch: (error) => new CliError({ message: "Failed to fetch models: " + errorMessage(error) }),
+  })
+// fork_change end
 
 const handlePluginAuth = Effect.fn("Cli.providers.pluginAuth")(function* (
   plugin: { auth: PluginAuth },
@@ -355,6 +387,45 @@ export const ProvidersLoginCommand = effectCmd({
     }
 
     const cfgSvc = yield* Config.Service
+
+    // fork_change start - this build is locked to a single provider (Genix). Skip provider
+    // selection entirely: prompt for the API key, store it, then fetch and persist the model
+    // list so the provider shows as connected. Storing the key alone leaves zero models in
+    // config, so the provider is dropped from the map and never connects. See FORK.md.
+    if (lockActive()) {
+      const locked = lockedProvider()
+      const cfg = yield* cfgSvc.get()
+
+      const key = yield* Prompt.password({
+        message: `Enter your ${locked.name} API key`,
+        validate: (x) => (x && x.length > 0 ? undefined : "Required"),
+      })
+      const apiKey = yield* promptValue(key)
+      yield* Effect.orDie(authSvc.set(locked.id, { type: "api", key: apiKey }))
+
+      const spinner = Prompt.spinner()
+      yield* spinner.start("Fetching models")
+      const models = yield* fetchLockedModels(locked.baseURL, apiKey).pipe(
+        Effect.tapError(() => spinner.stop("Failed to fetch models", 1)),
+      )
+      if (Object.keys(models).length === 0) {
+        yield* spinner.stop("No models returned", 1)
+        return yield* fail(`${locked.name} returned no models. Check the API key and try again.`)
+      }
+
+      const stillDisabled = new Set(cfg.disabled_providers ?? [])
+      stillDisabled.delete(locked.id)
+      yield* cfgSvc.updateGlobal({
+        provider: { [locked.id]: { models } },
+        disabled_providers: [...stillDisabled],
+      })
+
+      yield* spinner.stop(`Loaded ${Object.keys(models).length} models`)
+      yield* Prompt.outro("Login successful")
+      return
+    }
+    // fork_change end
+
     const pluginSvc = yield* Plugin.Service
     const modelsDev = yield* ModelsDev.Service
     yield* Effect.ignore(modelsDev.refresh(true))

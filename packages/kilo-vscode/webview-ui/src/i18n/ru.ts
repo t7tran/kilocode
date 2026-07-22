@@ -1240,7 +1240,7 @@ export const dict = {
   "deviceAuth.toast.codeCopied": "Код скопирован в буфер обмена",
   "deviceAuth.toast.errorCopied": "Ошибка скопирована в буфер обмена",
   "deviceAuth.status.initiating": "Начинаем вход...",
-  "deviceAuth.title": "Войти в Kilo Code",
+  "deviceAuth.title": "Войти в Genix Code",
   "deviceAuth.step1": "Шаг 1: Откройте этот URL",
   "deviceAuth.action.copyUrl": "Копировать URL",
   "deviceAuth.action.openBrowser": "Открыть браузер",
@@ -1263,7 +1263,7 @@ export const dict = {
 
   "profile.title": "Профиль",
   "profile.notLoggedIn": "Не авторизован",
-  "profile.action.login": "Войти через Kilo Code",
+  "profile.action.login": "Войти через Genix Code",
   "profile.balance.title": "Баланс",
   "profile.balance.refresh": "Обновить баланс",
   "profile.action.dashboard": "Панель управления",
@@ -1287,11 +1287,11 @@ export const dict = {
 
   "settings.experimental.title": "Экспериментальное",
   "settings.language.title": "Язык",
-  "settings.aboutKiloCode.title": "О Kilo Code",
+  "settings.aboutKiloCode.title": "О Genix Code",
 
   "session.messages.empty": "Начните разговор, введя сообщение ниже.",
   "session.messages.welcome":
-    "Kilo Code — это AI-помощник для программирования. Попросите его создать функции, исправить ошибки или объяснить вашу кодовую базу.",
+    "Genix Code — это AI-помощник для программирования. Попросите его создать функции, исправить ошибки или объяснить вашу кодовую базу.",
   "session.messages.scrollToBottom": "Прокрутить вниз",
   "session.messages.initializing": "Инициализация...",
   "session.messages.taskStarting": "Запуск...",
@@ -1348,7 +1348,7 @@ export const dict = {
   "settings.aboutKiloCode.port.label": "Порт:",
   "settings.aboutKiloCode.versionInfo": "Информация о версии",
   "settings.aboutKiloCode.version.label": "Версия:",
-  "settings.aboutKiloCode.extensionName": "Расширение Kilo Code",
+  "settings.aboutKiloCode.extensionName": "Расширение Genix Code",
   "settings.aboutKiloCode.community": "Сообщество и поддержка",
   "settings.aboutKiloCode.feedback.prefix": "Если у вас есть вопросы или отзывы, создайте issue на",
   "settings.aboutKiloCode.feedback.or": "или",
@@ -1392,7 +1392,7 @@ export const dict = {
   "settings.browser.headless.title": "Безголовый режим",
   "settings.browser.headless.description": "Запуск в безголовом режиме (без видимого окна браузера).",
 
-  "settings.language.description": "Выберите язык интерфейса Kilo Code. «Авто» использует язык отображения VS Code.",
+  "settings.language.description": "Выберите язык интерфейса Genix Code. «Авто» использует язык отображения VS Code.",
   "settings.language.auto": "Авто (язык VS Code)",
   "settings.language.current": "Текущий:",
 
@@ -1760,12 +1760,12 @@ export const dict = {
   "settings.legacyMigration.link": "Миграция с устаревшей версии",
   "settings.aboutKiloCode.legacyMigration.title": "Миграция с устаревшей версии",
   "settings.aboutKiloCode.legacyMigration.description":
-    "Перенос настроек из предыдущей установки Kilo Code, включая API-ключи провайдеров и модель по умолчанию.",
+    "Перенос настроек из предыдущей установки Genix Code, включая API-ключи провайдеров и модель по умолчанию.",
   "settings.aboutKiloCode.rooImport.description": "Импорт истории переписки из установки Roo Code.",
   "settings.aboutKiloCode.rooImport.button": "Импортировать сеансы из Roo Code",
 
   // Screen 1 — What's New
-  "migration.whatsNew.title": "Что нового в Kilo Code",
+  "migration.whatsNew.title": "Что нового в Genix Code",
   "migration.whatsNew.subtitle": "Мы перестроили расширение на более быстрой и эффективной основе.",
   "migration.whatsNew.features.performance.title": "Более быстрая работа агента",
   "migration.whatsNew.features.performance.detail":

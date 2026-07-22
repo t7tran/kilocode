@@ -984,6 +984,10 @@ export const layer = Layer.effect(
       const result = yield* flock
         .withLock(
           Effect.gen(function* () {
+            // kilocode_change - recreate the config dir if it was deleted after boot
+            // (global.ts only ensures it once at startup); otherwise writeFileString
+            // below fails with ENOENT and e.g. storing a provider silently breaks.
+            yield* fs.ensureDir(Global.Path.config).pipe(Effect.orDie)
             const before = (yield* readConfigFile(file)) ?? "{}"
             const patch = writableGlobal(config)
 

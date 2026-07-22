@@ -5,7 +5,7 @@ import os from "os"
 import path from "path"
 
 const root = path.join(import.meta.dir, "..", "..", "..")
-const wrapper = path.join(root, "bin", "kilo")
+const wrapper = path.join(root, "bin", "genix-cli")
 const postinstall = path.join(root, "script", "postinstall.mjs")
 
 describe("npm install artifact behavior", () => {
@@ -47,7 +47,7 @@ describe("npm install artifact behavior", () => {
         JSON.stringify({ name: `@kilocode/cli-${process.platform}-${process.arch}` }),
       )
       const binary = "#!/bin/sh\n# binary\nexit 0\n"
-      await Bun.write(path.join(bin, "kilo"), binary)
+      await Bun.write(path.join(bin, "genix-cli"), binary)
       await Bun.write(path.join(bin, "kilo-sandbox-mutation-worker.js"), "worker")
       await Bun.write(path.join(bin, "tree-sitter", "tree-sitter.wasm"), "wasm")
       await Bun.write(path.join(bin, "console", "index.html"), "console")
@@ -79,7 +79,7 @@ describe("npm install artifact behavior", () => {
       const prefix = path.join(tmp, "prefix")
       await fs.mkdir(bin, { recursive: true })
       await fs.mkdir(prefix, { recursive: true })
-      await fs.copyFile(wrapper, path.join(bin, "kilo"))
+      await fs.copyFile(wrapper, path.join(bin, "genix-cli"))
       await Bun.write(
         path.join(pkg, "package.json"),
         JSON.stringify(
@@ -87,8 +87,8 @@ describe("npm install artifact behavior", () => {
             name: "kilo-install-artifact-repro",
             version: "1.0.0",
             bin: {
-              kilo: "./bin/kilo",
-              kilocode: "./bin/kilo",
+              "genix-cli": "./bin/genix-cli",
+              kilocode: "./bin/genix-cli",
             },
           },
           null,
@@ -98,7 +98,7 @@ describe("npm install artifact behavior", () => {
 
       await $`npm install --prefix ${prefix} ${pkg} --no-package-lock --ignore-scripts --no-audit --no-fund`.quiet()
 
-      const commands = ["kilo", "kilocode"]
+      const commands = ["genix-cli", "kilocode"]
       for (const name of commands) {
         const link = path.join(prefix, "node_modules", ".bin", name)
         const stat = await fs.lstat(link)

@@ -17,13 +17,13 @@ import { currentFfmpegTarget, ensureFfmpegForTarget } from "./ffmpeg-helper"
 const forceRebuild = process.argv.includes("--force")
 
 /**
- * Ensures the VS Code extension has a CLI binary at `packages/kilo-vscode/bin/kilo`.
+ * Ensures the VS Code extension has a CLI binary at `packages/kilo-vscode/bin/genix-cli`.
  *
  * Strategy:
- * 1) If `bin/kilo` already exists -> ok.
+ * 1) If `bin/genix-cli` already exists -> ok.
  * 2) Else try to locate a prebuilt binary produced by `packages/opencode` build.
  * 3) Else try to build it via `bun run build --single` in `packages/opencode`.
- * 4) Copy the resulting binary into `packages/kilo-vscode/bin/kilo` and chmod +x.
+ * 4) Copy the resulting binary into `packages/kilo-vscode/bin/genix-cli` and chmod +x.
  *
  * This script is intended to be run from `packages/kilo-vscode` as part of build/package.
  */
@@ -37,7 +37,7 @@ const indexingDir = join(packagesDir, "kilo-indexing")
 const sandboxDir = join(packagesDir, "kilo-sandbox")
 
 const targetBinDir = join(kiloVscodeDir, "bin")
-const binName = process.platform === "win32" ? "kilo.exe" : "kilo"
+const binName = process.platform === "win32" ? "genix-cli.exe" : "genix-cli"
 const targetBinPath = join(targetBinDir, binName)
 const versionFile = join(targetBinDir, ".cli-version")
 
@@ -114,7 +114,7 @@ async function findKiloBinaryInOpencodeDist(): Promise<string | null> {
     // fall through to generic search
   }
 
-  // Fallback: find any dist/**/bin/kilo or kilo.exe
+  // Fallback: find any dist/**/bin/genix-cli or genix-cli.exe
   const queue = [distDir]
   while (queue.length) {
     const dir = queue.pop()
@@ -133,7 +133,7 @@ async function findKiloBinaryInOpencodeDist(): Promise<string | null> {
         queue.push(p)
         continue
       }
-      if (e.isFile() && (e.name === "kilo" || e.name === "kilo.exe") && basename(dirname(p)) === "bin") {
+      if (e.isFile() && (e.name === "genix-cli" || e.name === "genix-cli.exe") && basename(dirname(p)) === "bin") {
         if (!hasTreeSitterResources(p) || !hasKiloSandboxWorker(p)) continue
         return p
       }
@@ -168,7 +168,7 @@ async function ensureBuiltBinary(): Promise<string> {
   const built = await findKiloBinaryInOpencodeDist()
   if (!built) {
     throw new Error(
-      `CLI build completed but no binary was found in ${join(opencodeDir, "dist")} (expected dist/**/bin/kilo).`,
+      `CLI build completed but no binary was found in ${join(opencodeDir, "dist")} (expected dist/**/bin/genix-cli).`,
     )
   }
   return built

@@ -2,35 +2,25 @@
 const yes = new Set(["1", "true", "yes", "on"])
 const no = new Set(["0", "false", "no", "off"])
 
-const modern = {
+// fork_change start - Genix wordmark. Half-block glyphs (U+2580/2584/2588) are
+// universally supported, so modern and fallback share the same art.
+const genix = {
   tui: [
-    `██  ██ ██🬺🬏   ██  ██   ██🬺🬏     ████ ██     ██🬺🬏   `,
-    `████🬺🬏 ~~██   ██  ~~ ██~~██   ██~~~~ ██     ~~██   `,
-    `██  ██ ██████ 🬁🬬████ 🬁🬬██~~   🬁🬬████ 🬁🬬████ ██████ `,
-    `~~  ~~ ~~~~~~   ~~~~   ~~       ~~~~   ~~~~ ~~~~~~ `,
+    `▄▀▀▀▄ █▀▀▀  █▄  █ ▀█▀ ▀▄ ▄▀  ▄▀▀▀▀ █     ▀█▀`,
+    `█  ▄▄ █▀▀   █ █ █  █    █    █     █      █ `,
+    `▀▄▄▄█ █▄▄▄  █  ▀█ ▄█▄ ▄▀ ▀▄  ▀▄▄▄▄ █▄▄▄▄ ▄█▄`,
   ],
   plain: [
-    `██  ██ ██🬺🬏   ██  ██   ██🬺🬏     ████ ██     ██🬺🬏   `,
-    `████🬺🬏   ██   ██     ██  ██   ██     ██       ██   `,
-    `██  ██ ██████ 🬁🬬████ 🬁🬬██     🬁🬬████ 🬁🬬████ ██████ `,
+    `▄▀▀▀▄ █▀▀▀  █▄  █ ▀█▀ ▀▄ ▄▀  ▄▀▀▀▀ █     ▀█▀`,
+    `█  ▄▄ █▀▀   █ █ █  █    █    █     █      █ `,
+    `▀▄▄▄█ █▄▄▄  █  ▀█ ▄█▄ ▄▀ ▀▄  ▀▄▄▄▄ █▄▄▄▄ ▄█▄`,
   ],
-  exit: [`  ██  ██ ██🬺🬏   ██  ██   ██🬺🬏  `, `  ████🬺🬏   ██   ██     ██  ██  `, `  ██  ██ ██████ 🬁🬬████ 🬁🬬██    `],
+  exit: [`  ▄▀▀▀▄ █▀▀▀  █▄  █ ▀█▀ ▀▄ ▄▀`, `  █  ▄▄ █▀▀   █ █ █  █    █  `, `  ▀▄▄▄█ █▄▄▄  █  ▀█ ▄█▄ ▄▀ ▀▄`],
 }
 
-const fallback = {
-  tui: [
-    `██  ██ ████   ██  ██   ██       ████ ██     ████   `,
-    `████   ~~██   ██  ~~ ██~~██   ██~~~~ ██     ~~██   `,
-    `██  ██ ██████ ██████   ██~~     ████   ████ ██████ `,
-    `~~  ~~ ~~~~~~  ~~~~~   ~~       ~~~~   ~~~~ ~~~~~~ `,
-  ],
-  plain: [
-    `██  ██ ████   ██  ██   ███      ████ ██     ████   `,
-    `████     ██   ██     ██  ██   ██     ██       ██   `,
-    `██  ██ ██████ ██████   ██       ████ ██████ ██████ `,
-  ],
-  exit: [`  ██  ██ ████   ██  ██   ██    `, `  ████     ██   ██     ██  ██  `, `  ██  ██ ██████ ██████   ██    `],
-}
+const modern = genix
+const fallback = genix
+// fork_change end
 
 function flag(value: string | undefined) {
   const key = value?.toLowerCase()
@@ -75,5 +65,5 @@ export function session(
   platform = process.platform,
 ) {
   const logo = supports(env, platform) ? modern.exit : fallback.exit
-  return [``, `${logo[0]}${dim}${title}${normal}`, `${logo[1]}${dim}kilo -s ${id}${normal}`, logo[2]].join("\n")
+  return [``, `${logo[0]}${dim}${title}${normal}`, `${logo[1]}${dim}genix-cli -s ${id}${normal}`, logo[2]].join("\n")
 }
