@@ -30,7 +30,7 @@ on:
         description: "Skip npm publish (only build .vsix for GitHub Release)"
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -170,7 +170,7 @@ jobs:
     needs: build-cli
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ inputs.skip-npm != true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.skip-npm == false }}
     steps:
       - uses: actions/checkout@v6
 
